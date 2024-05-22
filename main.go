@@ -1,46 +1,84 @@
 package main
 
 import (
-  "fmt"
-  "time"
-  "sync"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"sync"
+	"time"
 )
 
+type Event struct {
+	name string
+}
+
 type Subscriber struct {
-  Name string
-  Fn func(wg *sync.WaitGroup)
+	name string
+	fn   func(wg *sync.WaitGroup, e Event)
 }
 
 type subscribers []Subscriber
 
+// TODO: Add sqlite3
+// TODO: Publish events
+// TODO: Filter subscriber triggers
+// TODO: Access events data in subscribers
+// TODO: When you subscribe it should create an event that is possible to be
+// trigger to be used to trigger that subscriber
 func main() {
-  d, _ := time.ParseDuration("2s")
+  e := Event{}
   subscribers := []Subscriber{}
-  sub1 := Subscriber{"sub1", func(wg *sync.WaitGroup) {
-    defer wg.Done()
-    fmt.Printf("Inside sub 1\n")
-  }}
 
-  sub2 := Subscriber{"sub2", func(wg *sync.WaitGroup) {
-    defer wg.Done()
-    time.Sleep(d)
-    fmt.Printf("Inside sub 2\n")
-  }}
+	sub1 := Subscriber{"sub1", func(wg *sync.WaitGroup, e Event) {
+		defer wg.Done()
+		d, _ := time.ParseDuration("1s")
+		time.Sleep(d)
+		fmt.Printf("Inside sub 1\n")
+	}}
 
-  subscribers = append(subscribers, sub2)
-  subscribers = append(subscribers, sub1)
+	sub2 := Subscriber{"sub2", func(wg *sync.WaitGroup, e Event) {
+		defer wg.Done()
+		d, _ := time.ParseDuration("3s")
+		time.Sleep(d)
+		fmt.Printf("Inside sub 2\n")
+	}}
 
-  publish(subscribers)
+	subscribers = append(subscribers, sub2)
+	subscribers = append(subscribers, sub1)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /", postPublish)
+
+	publish(subscribers, e)
+
+//err := http.ListenAndServe(":6969", mux)
+//if err != nil {
+//  fmt.Println("%s", err)
+//}
 }
 
-func publish(s []Subscriber) {
-  var wg sync.WaitGroup
-  wg.Add(len(s))
+func publish(s []Subscriber, e Event) {
+	var wg sync.WaitGroup
+	wg.Add(len(s))
 
-  for _, sub := range s {
-    fmt.Printf("%s\n", sub.Name)
-    go sub.Fn(&wg)
+	for _, sub := range s {
+		fmt.Printf("%s\n", sub.name)
+		go sub.fn(&wg, e)
+	}
+
+	wg.Wait()
+}
+
+func postPublish(w http.ResponseWriter, r *http.Request) {
+  decoder := json.NewDecoder(r.Body)
+  var e Event
+  err := decoder.Decode(&e)
+  if err != nil {
+    fmt.Println("%s", err)
   }
 
-  wg.Wait()
+	// publish(subscribers, e)
+
+	io.WriteString(w, "This is my website!\n")
 }

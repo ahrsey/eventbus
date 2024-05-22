@@ -4,7 +4,7 @@ build:
 check:
 	gopls check main.go
 
-format:
+fmt:
 	go fmt main.go
 
 test:
