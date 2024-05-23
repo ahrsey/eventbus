@@ -1,28 +1,13 @@
 # Eventbus
 
-- publish
-- subscribe
-- unsubscribe
+# Notes
+[sqlite3](https://gosamples.dev/sqlite-intro/)
 
-# Publish
-Publish events to event list
+For sqlite3 implementation copy [save](../save/main.go) structure
 
-# Subscribe
-Subscribe to event list with additional event filtering
-
-# Event filtering
-Specify which events we'll subscribe to, this should create a new event filter.
-Each event filter is sessentially a publisher with scoped events. Each event
-can be pushed to multiple event filters.
-
-# Methods
-- publish event
-- filter events
-- subscribe events or filtered events
-- trigger subscribers
-
-# Reading
-https://medium.com/globant/pub-sub-in-golang-an-introduction-8be4c65eafd4
-https://ably.com/blog/pubsub-golang
-https://cloud.google.com/pubsub/docs/overview
-https://blog.logrocket.com/building-pub-sub-service-go/
+# TODO
+// TODO: Publish events
+// TODO: Filter subscriber triggers
+// TODO: Access events data in subscribers
+// TODO: When you subscribe it should create an event that is possible to be
+// trigger to be used to trigger that subscriber
