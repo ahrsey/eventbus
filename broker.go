@@ -1,4 +1,4 @@
-package eventbus
+package main
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ type Broker struct {
 	queue       *Queue
 }
 
-func MakeBroker() *Broker {
+func NewBroker() *Broker {
 	subscribers := make(map[string][]func(str string))
 	queue := &Queue{}
 	broker := Broker{subscribers, queue}
@@ -22,29 +22,27 @@ func MakeBroker() *Broker {
 	return &broker
 }
 
-func (b Broker) Subscribe(topic string, fn func(str string)) {
+func (b *Broker) Subscribe(topic string, fn func(str string)) {
 	b.subscribers[topic] = append(b.subscribers[topic], fn)
 
 	_, ok := b.subscribers[topic]
 	if ok {
-		fmt.Printf("[INFO] Added subscriber %s to topic of `%s`\n", fn, topic)
+		fmt.Printf("[INFO] Added subscriber `%s` to topic of `%s`\n", fn, topic)
 	}
 }
 
-func (b Broker) QueuePublish(topic, args string) {
-	insert := [2]string{topic, args}
-
-	b.queue.items = append(b.queue.items, insert)
+func (b *Broker) QueuePublish(topic, args string) {
+	b.queue.items = append(b.queue.items, [2]string{topic, args})
 
 	for k, v := range b.queue.items {
-		fmt.Printf("[INFO] queue currently has %s, %s\n", k, v)
+		fmt.Printf("[INFO] queue currently has `%s`, `%s`\n", k, v)
 	}
 }
 
-func (b Broker) DrainQueue() {
+func (b *Broker) DrainQueue() {
 	var wg sync.WaitGroup
 	queue := b.queue.items
-	fmt.Printf("[INFO] Queue size %s\n", len(queue))
+	fmt.Printf("[INFO] Queue size `%s`\n", len(queue))
 
 	for _, v := range queue {
 		value, ok := v.([2]string)
@@ -56,8 +54,8 @@ func (b Broker) DrainQueue() {
 		topic := value[0]
 		args := value[1]
 
-		fmt.Printf("[INFO] topic %s\n", topic)
-		fmt.Printf("[INFO] args %s\n", args)
+		fmt.Printf("[INFO] topic `%s`\n", topic)
+		fmt.Printf("[INFO] args `%s`\n", args)
 
 		fns, ok := b.subscribers[topic]
 		if !ok {

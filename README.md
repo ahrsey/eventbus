@@ -20,3 +20,6 @@ For sqlite3 implementation copy [save](../save/main.go) structure
 // TODO: Pick up event and publish that event to required subscribers
 // TODO: Subscribe to publisher which creates event groups that can be
 // published to
+// TODO: Update move Queue out and implement drain as a method
+// TODO: Update handler signature to be able to work with more complex types
+// TODO: Write tests
