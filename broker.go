@@ -5,24 +5,29 @@ import (
 	"sync"
 )
 
+type Event struct {
+	topic string
+	body  string
+}
+
 type Queue struct {
 	items []interface{}
 }
 
 type Broker struct {
-	subscribers map[string][]func(str string)
+	subscribers map[string][]func(e *Event)
 	queue       *Queue
 }
 
 func NewBroker() *Broker {
-	subscribers := make(map[string][]func(str string))
+	subscribers := make(map[string][]func(e *Event))
 	queue := &Queue{}
 	broker := Broker{subscribers, queue}
 	fmt.Printf("[INFO] Making Broker%s\n", broker)
 	return &broker
 }
 
-func (b *Broker) Subscribe(topic string, fn func(str string)) {
+func (b *Broker) Subscribe(topic string, fn func(e *Event)) {
 	b.subscribers[topic] = append(b.subscribers[topic], fn)
 
 	_, ok := b.subscribers[topic]
@@ -31,8 +36,8 @@ func (b *Broker) Subscribe(topic string, fn func(str string)) {
 	}
 }
 
-func (b *Broker) QueuePublish(topic, args string) {
-	b.queue.items = append(b.queue.items, [2]string{topic, args})
+func (b *Broker) QueuePublish(e *Event) {
+	b.queue.items = append(b.queue.items, e)
 
 	for k, v := range b.queue.items {
 		fmt.Printf("[INFO] queue currently has `%s`, `%s`\n", k, v)
@@ -45,14 +50,15 @@ func (b *Broker) DrainQueue() {
 	fmt.Printf("[INFO] Queue size `%s`\n", len(queue))
 
 	for _, v := range queue {
-		value, ok := v.([2]string)
+		value, ok := v.(*Event)
 
 		if !ok {
 			fmt.Printf("[ERROR] value was not type of [2]string\n")
 			return
 		}
-		topic := value[0]
-		args := value[1]
+
+		topic := value.topic
+		args := value.body
 
 		fmt.Printf("[INFO] topic `%s`\n", topic)
 		fmt.Printf("[INFO] args `%s`\n", args)
@@ -64,9 +70,9 @@ func (b *Broker) DrainQueue() {
 
 		wg.Add(len(fns))
 		for _, fn := range fns {
-			go func(f func(str string)) {
+			go func(f func(e *Event)) {
 				defer wg.Done()
-				f(args)
+				f(value)
 			}(fn)
 		}
 	}

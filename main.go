@@ -6,8 +6,6 @@ import (
 	"net/http"
 )
 
-// TODO: Move logger out into reusable lib
-// TODO: Update handlers to take event struct
 func main() {
 	bus := NewBroker()
 	mux := http.NewServeMux()
@@ -21,8 +19,8 @@ func main() {
 	}
 }
 
-func log(str string) {
-	fmt.Printf("[INFO] Log handler called with `%s`\n", str)
+func log(e *Event) {
+	fmt.Printf("[INFO] Log handler called with `%s`\n", e)
 }
 
 func handlePublish(bus *Broker) func(w http.ResponseWriter, r *http.Request) {
@@ -30,10 +28,12 @@ func handlePublish(bus *Broker) func(w http.ResponseWriter, r *http.Request) {
 		topic := r.URL.Query().Get("topic")
 		body := r.URL.Query().Get("body")
 
+		e := Event{topic, body}
+
 		if topic != "" {
 			fmt.Printf("[INFO] Http publishing topic of `%s`\n", topic)
 			fmt.Printf("[INFO] Http publishing body of `%s`\n", body)
-			bus.QueuePublish(topic, body)
+			bus.QueuePublish(&e)
 			bus.DrainQueue()
 		} else {
 			fmt.Printf("[ERROR] Http topic required, but found `%s`\n", topic)
